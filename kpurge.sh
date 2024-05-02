@@ -1,4 +1,4 @@
-kubeadm reset
+sudo kubeadm reset --ignore-preflight-errors=all
 sudo apt-get purge kubeadm kubectl kubelet kubernetes-cni kube*   
 sudo apt-get autoremove  
 
