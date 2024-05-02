@@ -20,7 +20,7 @@ sudo apt update
 # Install Kubernetes components (specific version)
 sudo apt install -y kubeadm=1.28.1-1.1 kubelet=1.28.1-1.1 kubectl=1.28.1-1.1
 
-#curl -sSL https://github.com/kishanchand11/kubernetes/raw/master/kall.sh | tee kall.sh | sudo bash
+#curl -sSL https://github.com/kishanchand11/kubernetes/raw/master/kall.sh | sudo tee kall.sh | sudo bash
 #copy curl -L https://github.com/kishanchand11/kubernetes/raw/master/kall.sh | sudo tee kall.sh 
 #curl -sSL https://raw.githubusercontent.com/kishanchand11/kubernetes/master/kall.sh | sudo tee kall.sh >/dev/null && sudo bash kall.sh
 
