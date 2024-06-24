@@ -1,26 +1,49 @@
-#!/bin/sh
+# disable swap
+sudo swapoff -a
 
-# Update package lists
-sudo apt update
+# Create the .conf file to load the modules at bootup
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
 
-# Install necessary packages
-sudo apt-get install -y apt-transport-https ca-certificates curl
-sudo apt install docker.io -y
-sudo systemctl enable --now docker
+sudo modprobe overlay
+sudo modprobe br_netfilter
 
-# Adding GPG keys
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/kubernetes.gpg
+# sysctl params required by setup, params persist across reboots
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
 
-# Add the Kubernetes repository to the source list
-echo "deb [signed-by=/etc/apt/trusted.gpg.d/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+# Apply sysctl params without reboot
+sudo sysctl --system
 
-# Update package lists again
-sudo apt update
+## Install CRIO Runtime
+sudo apt-get update -y
+sudo apt-get install -y software-properties-common curl apt-transport-https ca-certificates gpg
 
-# Install Kubernetes components (specific version)
-sudo apt install -y kubeadm=1.28.1-1.1 kubelet=1.28.1-1.1 kubectl=1.28.1-1.1
+sudo curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /" | sudo tee /etc/apt/sources.list.d/cri-o.list
 
-#curl -sSL https://github.com/kishanchand11/kubernetes/raw/master/kall.sh | sudo tee kall.sh | sudo bash
-#copy curl -L https://github.com/kishanchand11/kubernetes/raw/master/kall.sh | sudo tee kall.sh 
-#curl -sSL https://raw.githubusercontent.com/kishanchand11/kubernetes/master/kall.sh | sudo tee kall.sh >/dev/null && sudo bash kall.sh
+sudo apt-get update -y
+sudo apt-get install -y cri-o
 
+sudo systemctl daemon-reload
+sudo systemctl enable crio --now
+sudo systemctl start crio.service
+
+echo "CRI runtime installed successfully"
+
+# Add Kubernetes APT repository and install required packages
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+sudo apt-get update -y
+sudo apt-get install -y kubelet="1.29.0-*" kubectl="1.29.0-*" kubeadm="1.29.0-*"
+sudo apt-get update -y
+sudo apt-get install -y jq
+
+sudo systemctl enable --now kubelet
+sudo systemctl start kubelet
