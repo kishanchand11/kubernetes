@@ -1,0 +1,5 @@
+Found multiple CRI endpoints on the host. Please define which one do you wish to use by setting the 'criSocket' field in the kubeadm configuration file: unix:///var/run/containerd/containerd.sock, unix:///var/run/crio/crio.sock
+
+solution:
+ sudo kubeadm config images pull --cri-socket unix:///var/run/crio/crio.sock
+ "cmd" --cri-socket unix:///var/run/crio/crio.sock  or "cmd" --cri-socket "cmd" --cri-socket unix:///var/run/crio/crio.sock
