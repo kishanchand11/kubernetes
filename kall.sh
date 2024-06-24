@@ -48,4 +48,4 @@ sudo apt-get install -y jq
 sudo systemctl enable --now kubelet
 sudo systemctl start kubelet
 
-# curl -L https://github.com/kishanchand11/kubernetes/raw/master/kall.sh 
+# curl -L https://github.com/kishanchand11/kubernetes/raw/master/kall.sh | sudo tee kall.sh
